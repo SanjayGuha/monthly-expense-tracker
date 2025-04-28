@@ -1,56 +1,48 @@
 # Monthly Expense Tracker
 
-A responsive web application for tracking monthly expenses with folder organization and summary charts.
+A React-based application for tracking monthly expenses with features like:
+- Adding and managing expenses
+- Categorizing expenses
+- Monthly summary with bar chart visualization
+- Excel export functionality
+- Folder organization for expenses
 
 ## Features
 
-- Create and manage expense folders
-- Add expenses with categories
-- View monthly, quarterly, and yearly summaries
-- Mobile-responsive design
-- Category-wise expense tracking
+- 📊 Visual expense tracking with bar charts
+- 📁 Folder-based organization
+- 📝 Detailed expense logging
+- 📤 Excel export capability
+- 📱 Responsive design
 
-## Setup Instructions
+## Getting Started
 
-1. Make sure you have Node.js installed on your system
-2. Clone this repository
-3. Navigate to the project directory
-4. Install dependencies:
-   ```bash
-   npm install
-   ```
-5. Start the development server:
-   ```bash
-   npm start
-   ```
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/monthly-expense-tracker.git
+```
 
-The application will open in your default browser at `http://localhost:3000`
+2. Install dependencies:
+```bash
+cd monthly-expense-tracker
+npm install
+```
 
-## Usage
+3. Start the development server:
+```bash
+npm start
+```
 
-1. **Dashboard**: View your overall expense status
-2. **Folders**: Create and manage expense folders
-   - Click "Add Folder" to create a new folder
-   - Inside each folder, you can add expenses
-3. **Summary**: View your expense summaries
-   - Monthly summary
-   - Quarterly summary
-   - Yearly summary
+4. Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
 ## Technologies Used
 
 - React
-- React Bootstrap
 - Chart.js
-- CSS3
+- XLSX
+- FileSaver
+- date-fns
 
-## Mobile Compatibility
+## License
 
-The application is fully responsive and works on:
-- Smartphones
-- Tablets
-- Desktop computers
-
-## Author
-
-Made by bugu for bugi 
+MIT 
