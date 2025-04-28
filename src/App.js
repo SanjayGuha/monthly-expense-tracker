@@ -212,7 +212,7 @@ function App() {
                           <div key={expense.id} className="expense-item">
                             <div className="expense-header">
                               <strong>{expense.title}</strong>
-                              <span className="expense-amount">₹{expense.amount}</span>
+                              <span className="expense-amount">{expense.amount.toFixed(2)}</span>
                             </div>
                             <div className="expense-details">
                               <span className="badge bg-primary">{expense.category}</span>
@@ -233,7 +233,7 @@ function App() {
                         <div className="stat-item">
                           <span className="stat-label">Total Expenses:</span>
                           <span className="stat-value">
-                            ₹{allExpenses.reduce((sum, exp) => sum + exp.amount, 0).toFixed(2)}
+                            {allExpenses.reduce((sum, exp) => sum + exp.amount, 0).toFixed(2)}
                           </span>
                         </div>
                         <div className="stat-item">
@@ -291,156 +291,77 @@ function App() {
 }
 
 function ExpenseForm({ show, handleClose, folderId, onSave }) {
-  const [expense, setExpense] = useState({
-    title: '',
-    amount: '',
-    category: '',
-    date: new Date().toISOString().split('T')[0],
-    description: '',
-    paymentMethod: '',
-    tags: []
-  });
-
-  const paymentMethods = [
-    'Cash',
-    'Credit Card',
-    'Debit Card',
-    'UPI',
-    'Bank Transfer',
-    'Digital Wallet'
-  ];
+  const [title, setTitle] = useState('');
+  const [amount, setAmount] = useState('');
+  const [category, setCategory] = useState('');
+  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave({
-      ...expense,
+    const expense = {
       id: Date.now(),
-      amount: parseFloat(expense.amount),
-      timestamp: new Date().toISOString()
-    });
+      title,
+      amount: parseFloat(amount),
+      category,
+      date,
+      folderId
+    };
+    onSave(expense);
     handleClose();
-    setExpense({
-      title: '',
-      amount: '',
-      category: '',
-      date: new Date().toISOString().split('T')[0],
-      description: '',
-      paymentMethod: '',
-      tags: []
-    });
   };
 
   return (
-    <Modal show={show} onHide={handleClose} size="lg">
+    <Modal show={show} onHide={handleClose}>
       <Modal.Header closeButton>
         <Modal.Title>Add New Expense</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Form onSubmit={handleSubmit}>
-          <Row>
-            <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>Title</Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="Enter expense title"
-                  value={expense.title}
-                  onChange={(e) => setExpense({...expense, title: e.target.value})}
-                  required
-                />
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>Amount</Form.Label>
-                <Form.Control
-                  type="number"
-                  placeholder="Enter amount"
-                  value={expense.amount}
-                  onChange={(e) => setExpense({...expense, amount: e.target.value})}
-                  required
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-
-          <Row>
-            <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>Category</Form.Label>
-                <Form.Select
-                  value={expense.category}
-                  onChange={(e) => setExpense({...expense, category: e.target.value})}
-                  required
-                >
-                  <option value="">Select category</option>
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </Form.Select>
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>Payment Method</Form.Label>
-                <Form.Select
-                  value={expense.paymentMethod}
-                  onChange={(e) => setExpense({...expense, paymentMethod: e.target.value})}
-                  required
-                >
-                  <option value="">Select payment method</option>
-                  {paymentMethods.map((method) => (
-                    <option key={method} value={method}>{method}</option>
-                  ))}
-                </Form.Select>
-              </Form.Group>
-            </Col>
-          </Row>
-
-          <Row>
-            <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>Date</Form.Label>
-                <Form.Control
-                  type="date"
-                  value={expense.date}
-                  onChange={(e) => setExpense({...expense, date: e.target.value})}
-                  required
-                />
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>Tags (comma-separated)</Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="e.g., important, recurring"
-                  value={expense.tags.join(', ')}
-                  onChange={(e) => setExpense({...expense, tags: e.target.value.split(',').map(tag => tag.trim())})}
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-
           <Form.Group className="mb-3">
-            <Form.Label>Description</Form.Label>
+            <Form.Label>Title</Form.Label>
             <Form.Control
-              as="textarea"
-              rows={3}
-              placeholder="Enter description"
-              value={expense.description}
-              onChange={(e) => setExpense({...expense, description: e.target.value})}
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
             />
           </Form.Group>
-
-          <div className="d-flex justify-content-end">
-            <Button variant="secondary" className="me-2" onClick={handleClose}>
-              Cancel
-            </Button>
-            <Button variant="primary" type="submit">
-              Save Expense
-            </Button>
-          </div>
+          <Form.Group className="mb-3">
+            <Form.Label>Amount</Form.Label>
+            <Form.Control
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              required
+            />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Category</Form.Label>
+            <Form.Select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              required
+            >
+              <option value="">Select a category</option>
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Date</Form.Label>
+            <Form.Control
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              required
+            />
+          </Form.Group>
+          <Button variant="primary" type="submit">
+            Save Expense
+          </Button>
         </Form>
       </Modal.Body>
     </Modal>
@@ -448,19 +369,18 @@ function ExpenseForm({ show, handleClose, folderId, onSave }) {
 }
 
 function Folders({ folders, setFolders, onUpdateExpenses }) {
-  const [newFolderName, setNewFolderName] = useState('');
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [selectedFolderId, setSelectedFolderId] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategory, setFilterCategory] = useState('');
-
-  useEffect(() => {
-    onUpdateExpenses(folders);
-  }, [folders, onUpdateExpenses]);
+  const [newFolderName, setNewFolderName] = useState('');
 
   const handleAddFolder = () => {
     if (newFolderName.trim()) {
-      setFolders([...folders, { id: Date.now(), name: newFolderName, expenses: [] }]);
+      const newFolder = {
+        id: Date.now(),
+        name: newFolderName,
+        expenses: []
+      };
+      setFolders([...folders, newFolder]);
       setNewFolderName('');
     }
   };
@@ -471,124 +391,77 @@ function Folders({ folders, setFolders, onUpdateExpenses }) {
   };
 
   const handleSaveExpense = (expense) => {
-    setFolders(folders.map(folder => {
-      if (folder.id === selectedFolderId) {
+    const updatedFolders = folders.map(folder => {
+      if (folder.id === expense.folderId) {
         return {
           ...folder,
           expenses: [...folder.expenses, expense]
         };
       }
       return folder;
-    }));
+    });
+    setFolders(updatedFolders);
+    onUpdateExpenses(updatedFolders);
   };
 
-  const filteredFolders = folders.map(folder => ({
-    ...folder,
-    expenses: folder.expenses.filter(expense => {
-      const matchesSearch = expense.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          expense.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = !filterCategory || expense.category === filterCategory;
-      return matchesSearch && matchesCategory;
-    })
-  }));
-
   return (
-    <div className="folders">
-      <h2>Your Folders</h2>
-      <div className="mb-3">
-        <input
-          type="text"
-          className="form-control"
-          placeholder="New folder name"
-          value={newFolderName}
-          onChange={(e) => setNewFolderName(e.target.value)}
-        />
-        <Button variant="primary" className="mt-2" onClick={handleAddFolder}>
-          Add Folder
-        </Button>
-      </div>
-
-      <div className="filters mb-4">
-        <Row>
-          <Col md={6}>
+    <Container>
+      <h2 className="mb-4">Myhna Heights</h2>
+      <div className="mb-4">
+        <Form.Group className="mb-3">
+          <Form.Label>New Folder Name</Form.Label>
+          <div className="d-flex">
             <Form.Control
               type="text"
-              placeholder="Search expenses..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              placeholder="Enter folder name"
             />
-          </Col>
-          <Col md={6}>
-            <Form.Select
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-            >
-              <option value="">All Categories</option>
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </Form.Select>
-          </Col>
-        </Row>
+            <Button variant="primary" onClick={handleAddFolder} className="ms-2">
+              Add Folder
+            </Button>
+          </div>
+        </Form.Group>
       </div>
-
-      <div className="folder-list">
-        {filteredFolders.map((folder) => (
-          <div key={folder.id} className="card mb-3">
-            <div className="card-body">
-              <div className="d-flex justify-content-between align-items-center">
-                <h5 className="card-title mb-0">{folder.name}</h5>
-                <Button 
-                  variant="outline-primary" 
-                  size="sm"
+      <Row>
+        {folders.map((folder) => (
+          <Col key={folder.id} md={6} lg={4} className="mb-4">
+            <Card>
+              <Card.Body>
+                <Card.Title>{folder.name}</Card.Title>
+                <Button
+                  variant="primary"
                   onClick={() => handleAddExpense(folder.id)}
+                  className="mb-3"
                 >
                   Add Expense
                 </Button>
-              </div>
-              {folder.expenses.length > 0 && (
-                <div className="mt-3">
-                  <h6>Expenses:</h6>
-                  <div className="expense-list">
-                    {folder.expenses.map((expense) => (
-                      <div key={expense.id} className="expense-item">
-                        <div className="expense-header">
-                          <strong>{expense.title}</strong>
-                          <span className="expense-amount">₹{expense.amount}</span>
-                        </div>
-                        <div className="expense-details">
-                          <span className="badge bg-primary">{expense.category}</span>
-                          <span className="badge bg-secondary">{expense.paymentMethod}</span>
-                          <span className="expense-date">{new Date(expense.date).toLocaleDateString()}</span>
-                        </div>
-                        {expense.tags.length > 0 && (
-                          <div className="expense-tags">
-                            {expense.tags.map((tag, index) => (
-                              <span key={index} className="badge bg-info me-1">{tag}</span>
-                            ))}
-                          </div>
-                        )}
-                        {expense.description && (
-                          <div className="expense-description">
-                            {expense.description}
-                          </div>
-                        )}
+                <div className="expense-list">
+                  {folder.expenses.map((expense) => (
+                    <div key={expense.id} className="expense-item">
+                      <div className="expense-header">
+                        <strong>{expense.title}</strong>
+                        <span className="expense-amount">{expense.amount.toFixed(2)}</span>
                       </div>
-                    ))}
-                  </div>
+                      <div className="expense-details">
+                        <span className="badge bg-primary">{expense.category}</span>
+                        <span className="expense-date">{new Date(expense.date).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              )}
-            </div>
-          </div>
+              </Card.Body>
+            </Card>
+          </Col>
         ))}
-      </div>
+      </Row>
       <ExpenseForm
         show={showExpenseForm}
         handleClose={() => setShowExpenseForm(false)}
         folderId={selectedFolderId}
         onSave={handleSaveExpense}
       />
-    </div>
+    </Container>
   );
 }
 
@@ -603,93 +476,98 @@ function Summary({ expenses, folders }) {
       return expenseDate >= monthStart && expenseDate <= monthEnd;
     });
 
-    const totalExpenses = monthlyExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-    const categoryTotals = monthlyExpenses.reduce((acc, expense) => {
-      acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
-      return acc;
-    }, {});
+    const categoryTotals = {};
+    categories.forEach(category => {
+      categoryTotals[category] = 0;
+    });
 
-    const chartData = {
-      labels: Object.keys(categoryTotals),
+    monthlyExpenses.forEach(expense => {
+      if (categoryTotals.hasOwnProperty(expense.category)) {
+        categoryTotals[expense.category] += expense.amount;
+      }
+    });
+
+    return {
+      labels: categories,
       datasets: [
         {
           label: 'Monthly Expenses by Category',
-          data: Object.values(categoryTotals),
+          data: categories.map(category => categoryTotals[category]),
           backgroundColor: [
-            '#FF6384',
-            '#36A2EB',
-            '#FFCE56',
-            '#4BC0C0',
-            '#9966FF',
-            '#FF9F40',
-            '#FF6384',
-            '#36A2EB',
-            '#FFCE56',
-            '#4BC0C0'
+            'rgba(255, 99, 132, 0.6)',
+            'rgba(54, 162, 235, 0.6)',
+            'rgba(255, 206, 86, 0.6)',
+            'rgba(75, 192, 192, 0.6)',
+            'rgba(153, 102, 255, 0.6)',
+            'rgba(255, 159, 64, 0.6)',
+            'rgba(199, 199, 199, 0.6)',
+            'rgba(83, 102, 255, 0.6)',
+            'rgba(40, 102, 255, 0.6)',
+            'rgba(255, 102, 102, 0.6)',
+            'rgba(102, 255, 102, 0.6)',
+            'rgba(255, 102, 255, 0.6)',
+            'rgba(102, 255, 255, 0.6)',
+            'rgba(255, 255, 102, 0.6)',
+            'rgba(102, 102, 255, 0.6)',
+            'rgba(255, 102, 102, 0.6)',
+            'rgba(102, 255, 102, 0.6)',
+            'rgba(255, 102, 255, 0.6)'
           ],
-          borderColor: '#fff',
+          borderColor: [
+            'rgba(255, 99, 132, 1)',
+            'rgba(54, 162, 235, 1)',
+            'rgba(255, 206, 86, 1)',
+            'rgba(75, 192, 192, 1)',
+            'rgba(153, 102, 255, 1)',
+            'rgba(255, 159, 64, 1)',
+            'rgba(199, 199, 199, 1)',
+            'rgba(83, 102, 255, 1)',
+            'rgba(40, 102, 255, 1)',
+            'rgba(255, 102, 102, 1)',
+            'rgba(102, 255, 102, 1)',
+            'rgba(255, 102, 255, 1)',
+            'rgba(102, 255, 255, 1)',
+            'rgba(255, 255, 102, 1)',
+            'rgba(102, 102, 255, 1)',
+            'rgba(255, 102, 102, 1)',
+            'rgba(102, 255, 102, 1)',
+            'rgba(255, 102, 255, 1)'
+          ],
           borderWidth: 1
         }
       ]
     };
+  };
 
-    const options = {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'top',
-        },
-        title: {
-          display: true,
-          text: 'Monthly Category-wise Expenses'
-        }
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
       },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            callback: function(value) {
-              return '₹' + value;
-            }
+      title: {
+        display: true,
+        text: 'Monthly Expenses by Category'
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: function(value) {
+            return '₹' + value;
           }
         }
       }
-    };
-
-    return { chartData, options, totalExpenses };
+    }
   };
-
-  const { chartData, options, totalExpenses } = getMonthlyCategoryData();
 
   return (
     <Container>
-      <h2 className="mb-4">Expense Summary</h2>
-      <Row>
-        <Col md={12}>
-          <Card className="mb-4">
-            <Card.Body>
-              <Card.Title>Monthly Total</Card.Title>
-              <div className="total-expense">
-                <span className="total-label">Total Expenses for {format(new Date(), 'MMMM yyyy')}:</span>
-                <span className="total-amount">₹{totalExpenses.toFixed(2)}</span>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-      <Row>
-        <Col md={12}>
-          <Card>
-            <Card.Body>
-              <Card.Title>Monthly Category Summary</Card.Title>
-              <div style={{ height: '400px', position: 'relative' }}>
-                <Bar data={chartData} options={options} />
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+      <h2 className="mb-4">Monthly Summary</h2>
+      <div className="chart-container" style={{ height: '400px', marginBottom: '20px' }}>
+        <Bar data={getMonthlyCategoryData()} options={chartOptions} />
+      </div>
     </Container>
   );
 }
