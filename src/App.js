@@ -290,16 +290,262 @@ function App() {
   );
 }
 
-function ExpenseForm({ show, handleClose, folderId, onSave }) {
-  const [title, setTitle] = useState('');
-  const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState('');
-  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+function Folders({ folders, setFolders, onUpdateExpenses }) {
+  const [showExpenseForm, setShowExpenseForm] = useState(false);
+  const [selectedFolderId, setSelectedFolderId] = useState(null);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [editingFolderId, setEditingFolderId] = useState(null);
+  const [editingExpenseId, setEditingExpenseId] = useState(null);
+  const [editingFolderName, setEditingFolderName] = useState('');
+
+  const handleAddFolder = () => {
+    if (newFolderName.trim()) {
+      const newFolder = {
+        id: Date.now(),
+        name: newFolderName,
+        expenses: []
+      };
+      setFolders([...folders, newFolder]);
+      setNewFolderName('');
+    }
+  };
+
+  const handleRenameFolder = (folderId) => {
+    if (editingFolderName.trim()) {
+      const updatedFolders = folders.map(folder => {
+        if (folder.id === folderId) {
+          return { ...folder, name: editingFolderName };
+        }
+        return folder;
+      });
+      setFolders(updatedFolders);
+      setEditingFolderId(null);
+      setEditingFolderName('');
+    }
+  };
+
+  const handleDeleteFolder = (folderId) => {
+    if (window.confirm('Are you sure you want to delete this folder? All expenses in this folder will be deleted.')) {
+      const updatedFolders = folders.filter(folder => folder.id !== folderId);
+      setFolders(updatedFolders);
+      onUpdateExpenses(updatedFolders);
+    }
+  };
+
+  const handleEditExpense = (expense) => {
+    setEditingExpenseId(expense.id);
+    setSelectedFolderId(expense.folderId);
+    setShowExpenseForm(true);
+  };
+
+  const handleDeleteExpense = (folderId, expenseId) => {
+    if (window.confirm('Are you sure you want to delete this expense?')) {
+      const updatedFolders = folders.map(folder => {
+        if (folder.id === folderId) {
+          return {
+            ...folder,
+            expenses: folder.expenses.filter(exp => exp.id !== expenseId)
+          };
+        }
+        return folder;
+      });
+      setFolders(updatedFolders);
+      onUpdateExpenses(updatedFolders);
+    }
+  };
+
+  const handleAddExpense = (folderId) => {
+    setSelectedFolderId(folderId);
+    setEditingExpenseId(null);
+    setShowExpenseForm(true);
+  };
+
+  const handleSaveExpense = (expense) => {
+    const updatedFolders = folders.map(folder => {
+      if (folder.id === expense.folderId) {
+        if (editingExpenseId) {
+          // Update existing expense
+          return {
+            ...folder,
+            expenses: folder.expenses.map(exp => 
+              exp.id === editingExpenseId ? { ...expense, id: editingExpenseId } : exp
+            )
+          };
+        } else {
+          // Add new expense
+          return {
+            ...folder,
+            expenses: [...folder.expenses, expense]
+          };
+        }
+      }
+      return folder;
+    });
+    setFolders(updatedFolders);
+    onUpdateExpenses(updatedFolders);
+    setShowExpenseForm(false);
+    setEditingExpenseId(null);
+  };
+
+  return (
+    <Container>
+      <h2 className="mb-4">Myhna Heights</h2>
+      <div className="mb-4">
+        <Form.Group className="mb-3">
+          <Form.Label>New Folder Name</Form.Label>
+          <div className="d-flex">
+            <Form.Control
+              type="text"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              placeholder="Enter folder name"
+            />
+            <Button variant="primary" onClick={handleAddFolder} className="ms-2">
+              <i className="bi bi-plus-lg"></i> Add Folder
+            </Button>
+          </div>
+        </Form.Group>
+      </div>
+      <Row>
+        {folders.map((folder) => (
+          <Col key={folder.id} md={6} lg={4} className="mb-4">
+            <Card>
+              <Card.Body>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  {editingFolderId === folder.id ? (
+                    <div className="d-flex w-100">
+                      <Form.Control
+                        type="text"
+                        value={editingFolderName}
+                        onChange={(e) => setEditingFolderName(e.target.value)}
+                        className="me-2"
+                      />
+                      <Button 
+                        variant="success" 
+                        size="sm" 
+                        onClick={() => handleRenameFolder(folder.id)}
+                        className="me-1"
+                      >
+                        <i className="bi bi-check-lg"></i>
+                      </Button>
+                      <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        onClick={() => setEditingFolderId(null)}
+                      >
+                        <i className="bi bi-x-lg"></i>
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <Card.Title className="mb-0">{folder.name}</Card.Title>
+                      <div>
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          onClick={() => {
+                            setEditingFolderId(folder.id);
+                            setEditingFolderName(folder.name);
+                          }}
+                          className="me-1"
+                        >
+                          <i className="bi bi-pencil"></i>
+                        </Button>
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={() => handleDeleteFolder(folder.id)}
+                        >
+                          <i className="bi bi-trash"></i>
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <Button
+                  variant="primary"
+                  onClick={() => handleAddExpense(folder.id)}
+                  className="mb-3"
+                >
+                  <i className="bi bi-plus-lg"></i> Add Expense
+                </Button>
+                <div className="expense-list">
+                  {folder.expenses.map((expense) => (
+                    <div key={expense.id} className="expense-item">
+                      <div className="expense-header">
+                        <strong>{expense.title}</strong>
+                        <div className="expense-actions">
+                          <Button
+                            variant="link"
+                            size="sm"
+                            onClick={() => handleEditExpense(expense)}
+                            className="text-primary"
+                          >
+                            <i className="bi bi-pencil"></i>
+                          </Button>
+                          <Button
+                            variant="link"
+                            size="sm"
+                            onClick={() => handleDeleteExpense(folder.id, expense.id)}
+                            className="text-danger"
+                          >
+                            <i className="bi bi-trash"></i>
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="expense-details">
+                        <span className="expense-amount">{expense.amount.toFixed(2)}</span>
+                        <span className="badge bg-primary">{expense.category}</span>
+                        <span className="expense-date">{new Date(expense.date).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        ))}
+      </Row>
+      <ExpenseForm
+        show={showExpenseForm}
+        handleClose={() => {
+          setShowExpenseForm(false);
+          setEditingExpenseId(null);
+        }}
+        folderId={selectedFolderId}
+        onSave={handleSaveExpense}
+        editingExpense={editingExpenseId ? folders
+          .find(f => f.expenses.some(e => e.id === editingExpenseId))
+          ?.expenses.find(e => e.id === editingExpenseId) : null}
+      />
+    </Container>
+  );
+}
+
+function ExpenseForm({ show, handleClose, folderId, onSave, editingExpense }) {
+  const [title, setTitle] = useState(editingExpense?.title || '');
+  const [amount, setAmount] = useState(editingExpense?.amount || '');
+  const [category, setCategory] = useState(editingExpense?.category || '');
+  const [date, setDate] = useState(editingExpense?.date || format(new Date(), 'yyyy-MM-dd'));
+
+  useEffect(() => {
+    if (editingExpense) {
+      setTitle(editingExpense.title);
+      setAmount(editingExpense.amount);
+      setCategory(editingExpense.category);
+      setDate(editingExpense.date);
+    } else {
+      setTitle('');
+      setAmount('');
+      setCategory('');
+      setDate(format(new Date(), 'yyyy-MM-dd'));
+    }
+  }, [editingExpense]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const expense = {
-      id: Date.now(),
+      id: editingExpense?.id || Date.now(),
       title,
       amount: parseFloat(amount),
       category,
@@ -313,7 +559,7 @@ function ExpenseForm({ show, handleClose, folderId, onSave }) {
   return (
     <Modal show={show} onHide={handleClose}>
       <Modal.Header closeButton>
-        <Modal.Title>Add New Expense</Modal.Title>
+        <Modal.Title>{editingExpense ? 'Edit Expense' : 'Add New Expense'}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Form onSubmit={handleSubmit}>
@@ -360,108 +606,11 @@ function ExpenseForm({ show, handleClose, folderId, onSave }) {
             />
           </Form.Group>
           <Button variant="primary" type="submit">
-            Save Expense
+            {editingExpense ? 'Update Expense' : 'Save Expense'}
           </Button>
         </Form>
       </Modal.Body>
     </Modal>
-  );
-}
-
-function Folders({ folders, setFolders, onUpdateExpenses }) {
-  const [showExpenseForm, setShowExpenseForm] = useState(false);
-  const [selectedFolderId, setSelectedFolderId] = useState(null);
-  const [newFolderName, setNewFolderName] = useState('');
-
-  const handleAddFolder = () => {
-    if (newFolderName.trim()) {
-      const newFolder = {
-        id: Date.now(),
-        name: newFolderName,
-        expenses: []
-      };
-      setFolders([...folders, newFolder]);
-      setNewFolderName('');
-    }
-  };
-
-  const handleAddExpense = (folderId) => {
-    setSelectedFolderId(folderId);
-    setShowExpenseForm(true);
-  };
-
-  const handleSaveExpense = (expense) => {
-    const updatedFolders = folders.map(folder => {
-      if (folder.id === expense.folderId) {
-        return {
-          ...folder,
-          expenses: [...folder.expenses, expense]
-        };
-      }
-      return folder;
-    });
-    setFolders(updatedFolders);
-    onUpdateExpenses(updatedFolders);
-  };
-
-  return (
-    <Container>
-      <h2 className="mb-4">Myhna Heights</h2>
-      <div className="mb-4">
-        <Form.Group className="mb-3">
-          <Form.Label>New Folder Name</Form.Label>
-          <div className="d-flex">
-            <Form.Control
-              type="text"
-              value={newFolderName}
-              onChange={(e) => setNewFolderName(e.target.value)}
-              placeholder="Enter folder name"
-            />
-            <Button variant="primary" onClick={handleAddFolder} className="ms-2">
-              Add Folder
-            </Button>
-          </div>
-        </Form.Group>
-      </div>
-      <Row>
-        {folders.map((folder) => (
-          <Col key={folder.id} md={6} lg={4} className="mb-4">
-            <Card>
-              <Card.Body>
-                <Card.Title>{folder.name}</Card.Title>
-                <Button
-                  variant="primary"
-                  onClick={() => handleAddExpense(folder.id)}
-                  className="mb-3"
-                >
-                  Add Expense
-                </Button>
-                <div className="expense-list">
-                  {folder.expenses.map((expense) => (
-                    <div key={expense.id} className="expense-item">
-                      <div className="expense-header">
-                        <strong>{expense.title}</strong>
-                        <span className="expense-amount">{expense.amount.toFixed(2)}</span>
-                      </div>
-                      <div className="expense-details">
-                        <span className="badge bg-primary">{expense.category}</span>
-                        <span className="expense-date">{new Date(expense.date).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        ))}
-      </Row>
-      <ExpenseForm
-        show={showExpenseForm}
-        handleClose={() => setShowExpenseForm(false)}
-        folderId={selectedFolderId}
-        onSave={handleSaveExpense}
-      />
-    </Container>
   );
 }
 
